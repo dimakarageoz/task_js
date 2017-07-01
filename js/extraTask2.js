@@ -35,28 +35,40 @@ const images = [
     }
 ];
 
+const parseImg = ({ width, height, frames, widthFrame, heightFrame }) => {
+    let slide = frames;
+    let framesPosition = [];
+    let left = 0;
+    let top = 0;
+    let first = true;
+    while(slide>0) {
+        slide--;
+        left=(left+width/widthFrame)%width;
+        top=(!first && (left === 0)) ? (top+height/heightFrame)%height : top;
+        first = false;
+        const position = {
+            left: left,
+            top: top
+        };
+        framesPosition = [...framesPosition, position];
+    }
+    return framesPosition;
+};
+
+    
 const animation = (img, item) => {
-    let slide = 0;
-    let top = img.style.top ? parseInt(
-        img.style.top.split('px')[0]
-    ): 0;
-    let left = img.style.left ? parseInt(
-        img.style.left.split('px')[0]
-    ) : 0;
-    let first = (img.style.top || img.style.left) ? false : true;
+    let slide = img.counter ? img.counter : 0;
     this.anime = setInterval(()=> {
-        left=(left+item.width/item.widthFrame)%item.width;
-        top=(!first && (left === 0)) ? (top+item.height/item.heightFrame)%item.height : top;
         slide++;
+        img.counter = slide;
         if(slide<item.frames) {
-            img.style.left = `-${left}px`;
-            img.style.top = `-${top}px`;
+            img.style.left = `-${item.framesPosition[slide-1].left}px`;
+            img.style.top = `-${item.framesPosition[slide-1].top}px`;
         } else {
             slide = left = top = 0;
             img.style.left = `0px`;
             img.style.top = `0px`;
         }
-        first = false;
 }, 30)
 };
 
@@ -65,10 +77,10 @@ images.map((item, index) => {
     div.className+='container_div';
     const gif = document.createElement('div');
     gif.className+='gif-container';
-    
     let img = document.createElement('img');
     img.id=index;
     img.src = item.src;
+    item.framesPosition = parseImg(item);
     img.addEventListener('mouseenter', () => {
         animation(img, item)
     })

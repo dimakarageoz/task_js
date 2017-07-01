@@ -1,4 +1,3 @@
-
 const container = document.getElementById('container');
 const images = [
     {
@@ -35,46 +34,52 @@ const images = [
     }
 ];
 
-const animation = (img, item, index) => {
+const parseImg = ({ width, height, frames, widthFrame, heightFrame }) => {
+    let slide = frames;
+    let framesPosition = [];
     let left = 0;
-    let slide = 0;
     let top = 0;
     let first = true;
-    this.anime = setInterval(()=> {
-        left=(left+item.width/item.widthFrame)%item.width;
-        top=(!first && (left === 0)) ? (top+item.height/item.heightFrame)%item.height : top;
-        slide++;
-        if(slide<item.frames) {
-            img.style.left = `-${left}px`;
-            img.style.top = `-${top}px`;
-        } else {
-            clearInterval(anime);
-        }
+    while(slide>0) {
+        slide--;
+        left=(left+width/widthFrame)%width;
+        top=(!first && (left === 0)) ? (top+height/heightFrame)%height : top;
         first = false;
+        const position = {
+            left: left,
+            top: top
+        };
+        framesPosition = [...framesPosition, position];
+    }
+    return framesPosition;
+};
+
+const animation = (img, item) => {
+    let slide = 0;
+    this.anime = setInterval(()=> {
+        slide++;
+        img.counter = slide;
+        if(slide<item.frames) {
+            img.style.left = `-${item.framesPosition[slide-1].left}px`;
+            img.style.top = `-${item.framesPosition[slide-1].top}px`;
+        } else {
+            slide = left = top = 0;
+            img.style.left = `0px`;
+            img.style.top = `0px`;
+        }
 }, 30)
 };
 
 const reverseAnimatin = (img, item) => {
-    let slide = 0;
-    let top = -parseInt(
-        img.style.top.split('px')[0]
-    );
-    let left = -parseInt(
-        img.style.left.split('px')[0]
-    );
+    let slide = img.counter;
     this.anime = setInterval(()=> {
-        if((slide<item.frames) || (left === 0 && top === 0 )) {
-            img.style.left = `-${left}px`;
-            img.style.top = `-${top}px`;
+        if(slide>1) {
+            img.style.left = `-${item.framesPosition[slide-1].left}px`;
+            img.style.top = `-${item.framesPosition[slide-1].top}px`;
         } else {
             clearInterval(anime);
         }
-        left=(left-item.width/item.widthFrame)%item.width;
-        if(left === 0) {
-            top=(top-item.height/item.heightFrame)%item.height;
-            left=item.width/item.widthFrame;
-        }
-        slide++;
+        slide--;
 }, 30)
 };
 
@@ -87,6 +92,7 @@ images.map((item, index) => {
     let img = document.createElement('img');
     img.id=index;
     img.src = item.src;
+    item.framesPosition = parseImg(item);
     img.addEventListener('mouseenter', () => {
         animation(img, item)
     })
