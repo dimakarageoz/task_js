@@ -54,52 +54,47 @@ const parseImg = ({ width, height, frames, widthFrame, heightFrame }) => {
     return framesPosition;
 };
 
-const animation = (img, item) => {
-    let slide = 0;
-    this.anime = setInterval(()=> {
-        slide++;
-        img.counter = slide;
-        if(slide<item.frames) {
-            img.style.left = `-${item.framesPosition[slide-1].left}px`;
-            img.style.top = `-${item.framesPosition[slide-1].top}px`;
-        } else {
-            slide = left = top = 0;
-            img.style.left = `0px`;
-            img.style.top = `0px`;
-        }
-}, 30)
-};
-
-const reverseAnimatin = (img, item) => {
-    let slide = img.counter;
-    this.anime = setInterval(()=> {
-        if(slide>1) {
-            img.style.left = `-${item.framesPosition[slide-1].left}px`;
-            img.style.top = `-${item.framesPosition[slide-1].top}px`;
-        } else {
-            clearInterval(anime);
-        }
-        slide--;
-}, 30)
-};
-
 images.map((item, index) => {
     const div = document.createElement('div');
-    div.className+='container_div';
+    div.classList.add('container_div');
     const gif = document.createElement('div');
-    gif.className+='gif-container';
+    gif.classList.add('gif-container');
     
     let img = document.createElement('img');
     img.id=index;
     img.src = item.src;
+    img.frames = item.frames;
+    img.counter = 1;
+    img.revarse = false;
+    img.classList.add('animation--move');
     item.framesPosition = parseImg(item);
     img.addEventListener('mouseenter', () => {
-        animation(img, item)
-    })
+    
+    const move = () => {
+        if(img.counter < img.frames-1 && $(`#${img.id}`).is(':hover')) {
+            const slide = img.counter;
+            img.style.left = `-${item.framesPosition[slide-1].left}px`;
+            img.style.top = `-${item.framesPosition[slide-1].top}px`;
+            img.counter+=1;
+            requestAnimationFrame(move);
+        }
+        if(img.counter == img.frames) img.counter = 1;
+    }
+    move();
+    });
     img.addEventListener('mouseout', () => {
-        clearInterval(anime);
-        reverseAnimatin(img, item);
-    })
+        const reverseMove = () => {
+            if(img.counter > 1) {
+                const slide = img.counter;
+                img.style.left = `-${item.framesPosition[slide-1].left}px`;
+                img.style.top = `-${item.framesPosition[slide-1].top}px`;
+                img.counter-=1;
+                requestAnimationFrame(reverseMove);
+            }
+        }
+        reverseMove();
+    });
+
     gif.appendChild(img);
     div.appendChild(gif);
     container.appendChild(div);

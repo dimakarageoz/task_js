@@ -35,41 +35,61 @@ const images = [
     }
 ];
 
-const animation = (img, item) => {
+const parseImg = ({ width, height, frames, widthFrame, heightFrame }) => {
+    let slide = frames;
+    let framesPosition = [];
     let left = 0;
-    let slide = 0;
     let top = 0;
     let first = true;
-    this.anime = setInterval(()=> {
-        left=(left+item.width/item.widthFrame)%item.width;
-        top=(!first && (left === 0)) ? (top+item.height/item.heightFrame)%item.height : top;
-        slide++;
-        if(slide<item.frames) {
-            img.style.left = `-${left}px`;
-            img.style.top = `-${top}px`;
-        } else {
-            slide = left = top = 0;
-            img.style.left = `0px`;
-            img.style.top = `0px`;
-        }
+    while(slide>0) {
+        slide--;
+        left=(left+width/widthFrame)%width;
+        top=(!first && (left === 0)) ? (top+height/heightFrame)%height : top;
         first = false;
-}, 30)
+        const position = {
+            left: left,
+            top: top
+        };
+        framesPosition = [...framesPosition, position];
+    }
+    return framesPosition;
 };
+
 
 images.map((item, index) => {
     const div = document.createElement('div');
-    div.className+='container_div';
+    div.classList.add('container_div');
     const gif = document.createElement('div');
-    gif.className+='gif-container';
+    gif.classList.add('gif-container');
     
     let img = document.createElement('img');
-    img.id=index;
+    img.counter = 0;
+    img.id = index;
     img.src = item.src;
+    img.reverse = false;
+    item.framesPosition = parseImg(item);
     img.addEventListener('mouseenter', () => {
-        animation(img, item)
-    })
-    img.addEventListener('mouseout', () => {
-        clearInterval(anime);
+        const animation = () => {
+            if(!img.reverse) {
+                img.counter+=1;
+                if(img.counter<item.frames && $(`#${img.id}`).is(':hover')) {
+                    img.style.left = `-${item.framesPosition[img.counter-1].left}px`;
+                    img.style.top = `-${item.framesPosition[img.counter-1].top}px`;
+                } else {
+                    img.reverse= true;
+                }
+            } else {
+                img.counter -=1;
+                if(img.counter>0 && $(`#${img.id}`).is(':hover')) {
+                    img.style.left = `-${item.framesPosition[img.counter-1].left}px`;
+                    img.style.top = `-${item.framesPosition[img.counter-1].top}px`;
+                 } else {
+                    img.reverse = false;
+                }
+            }
+            requestAnimationFrame(animation);
+        };
+        animation();
     })
     gif.appendChild(img);
     div.appendChild(gif);
